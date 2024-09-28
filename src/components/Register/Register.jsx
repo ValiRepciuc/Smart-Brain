@@ -23,7 +23,7 @@ class Register extends React.Component {
   onSubmitSignIn = (event) => {
     event.preventDefault(); // Prevent form from reloading
 
-    fetch("http://localhost:3000/register", {
+    fetch("https://smartbrainapi-wa0b.onrender.com/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
