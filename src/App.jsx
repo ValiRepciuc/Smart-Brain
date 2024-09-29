@@ -118,7 +118,7 @@ onBtnSubmit = () => {
         console.log(response);
         if (response) {
           this.displayFaceBox(this.calculateFaceLocation(response));
-          fetch("http://localhost:3000/image", {
+          fetch("https://smartbrainapi-wa0b.onrender.com/image", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
