@@ -110,7 +110,7 @@ onBtnSubmit = () => {
     console.log("click");
 
     fetch(
-      "/clarifai-api/v2/models/face-detection/outputs",
+      "https://api.clarifai.com/v2/models/face-detection/outputs",
       returnClarifaiReqOptions(this.state.input)
     )
       .then((response) => response.json())
