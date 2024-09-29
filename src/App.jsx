@@ -105,7 +105,7 @@ class App extends Component {
     this.setState({ input: event.target.value });
   };
 
-  onBtnSubmit = () => {
+    onBtnSubmit = () => {
     this.setState({ imageURL: this.state.input });
     console.log("click");
 
@@ -118,8 +118,8 @@ class App extends Component {
         console.log(response);
         if (response) {
           this.displayFaceBox(this.calculateFaceLocation(response));
-          fetch("https://smartbrainapi-wa0b.onrender.com/image", {
-            method: "PUT",
+          fetch("http://localhost:3000/image", {
+            method: "put",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               id: this.state.user?.id,
@@ -127,10 +127,7 @@ class App extends Component {
           })
             .then((response) => response.json())
             .then((count) => {
-              // Corrected setState call
-              this.setState((prevState) => ({
-                user: { ...prevState.user, entries: count },
-              }));
+              this.setState(Object.assign(this.state.user), { entries: count });
             });
         }
         this.displayFaceBox(this.calculateFaceLocation(response));
