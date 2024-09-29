@@ -105,42 +105,38 @@ class App extends Component {
     this.setState({ input: event.target.value });
   };
 
-   onBtnSubmit = () => {
-  this.setState({ imageURL: this.state.input });
+onBtnSubmit = () => {
+    this.setState({ imageURL: this.state.input });
+    console.log("click");
 
-  fetch(
-    "https://api.clarifai.com/v2/models/face-detection/outputs",
-    returnClarifaiReqOptions(this.state.input)
-  )
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((response) => {
-      if (response) {
-        this.displayFaceBox(this.calculateFaceLocation(response));
-        fetch(`${process.env.REACT_APP_API_URL || "http://localhost:3000"}/image`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: this.state.user?.id,
-          }),
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error("Failed to update entries");
-            return res.json();
+    fetch(
+      "/clarifai-api/v2/models/face-detection/outputs",
+      returnClarifaiReqOptions(this.state.input)
+    )
+      .then((response) => response.json())
+      .then((response) => {
+        console.log(response);
+        if (response) {
+          this.displayFaceBox(this.calculateFaceLocation(response));
+          fetch("http://localhost:3000/image", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: this.state.user?.id,
+            }),
           })
-          .then((count) => {
-            this.setState((prevState) => ({
-              user: { ...prevState.user, entries: count },
-            }));
-          });
-      }
-    })
-    .catch((err) => console.error("Error with Clarifai or image fetch:", err));
-};
+            .then((response) => response.json())
+            .then((count) => {
+              // Corrected setState call
+              this.setState((prevState) => ({
+                user: { ...prevState.user, entries: count },
+              }));
+            });
+        }
+        this.displayFaceBox(this.calculateFaceLocation(response));
+      })
+      .catch((err) => console.log(err));
+  };
   
   onRouteChange = (route) => {
     if (route === "signout") {
