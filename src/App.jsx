@@ -8,45 +8,6 @@ import Signin from "./components/Signin/Signin";
 import Register from "./components/Register/Register";
 import FaceRecognition from "./components/FaceRecognition/FaceRecognition";
 
-const returnClarifaiReqOptions = (url) => {
-  // Your PAT (Personal Access Token) can be found in the Account's Security section
-  const PAT = "ec0b830809234f1b90a4d0b3f8a0b5d1";
-  // Specify the correct user_id/app_id pairings
-  // Since you're making inferences outside your app's scope
-  const USER_ID = "qwe123";
-  const APP_ID = "my-first-application-da5bga";
-  // Change these to whatever model and image URL you want to use
-  const MODEL_ID = "face-detection";
-  const IMAGE_URL = url;
-
-  const raw = JSON.stringify({
-    user_app_id: {
-      user_id: USER_ID,
-      app_id: APP_ID,
-    },
-    inputs: [
-      {
-        data: {
-          image: {
-            url: IMAGE_URL,
-          },
-        },
-      },
-    ],
-  });
-
-  const requestOptions = {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: "Key " + PAT,
-    },
-    body: raw,
-  };
-
-  return requestOptions;
-};
-
 const initialState = {
   input: "",
   imageURL: "",
@@ -101,23 +62,30 @@ class App extends Component {
     this.setState({ box: box });
     console.log(box);
   };
+
   onInputChange = (event) => {
     this.setState({ input: event.target.value });
   };
 
-onBtnSubmit = () => {
+  // Use backend proxy to avoid CORS issues
+  onBtnSubmit = () => {
     this.setState({ imageURL: this.state.input });
     console.log("click");
 
-    fetch(
-      "https://api.clarifai.com/v2/models/face-detection/outputs",
-      returnClarifaiReqOptions(this.state.input)
-    )
+    fetch("https://smartbrainapi-wa0b.onrender.com/clarifai-api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        input: this.state.input, // Pass the input image URL
+      }),
+    })
       .then((response) => response.json())
       .then((response) => {
         console.log(response);
         if (response) {
           this.displayFaceBox(this.calculateFaceLocation(response));
+
+          // Fetch to update user entries in your backend
           fetch("https://smartbrainapi-wa0b.onrender.com/image", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -127,20 +95,23 @@ onBtnSubmit = () => {
           })
             .then((response) => response.json())
             .then((count) => {
-              // Corrected setState call
               this.setState((prevState) => ({
                 user: { ...prevState.user, entries: count },
               }));
-            });
+            })
+            .catch((err) =>
+              console.log("Error updating user entries:", err)
+            );
         }
-        this.displayFaceBox(this.calculateFaceLocation(response));
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log("Error with Clarifai API request:", err);
+      });
   };
-  
+
   onRouteChange = (route) => {
     if (route === "signout") {
-      this.setState({ isSignedIn: false });
+      this.setState(initialState);
     } else if (route === "home") {
       this.setState({ isSignedIn: true });
     }
@@ -165,7 +136,7 @@ onBtnSubmit = () => {
               onInputChange={this.onInputChange}
               onBtnSubmit={this.onBtnSubmit}
             />
-            <FaceRecognition box={this.state.box} imageURL={this.state.input} />
+            <FaceRecognition box={this.state.box} imageURL={this.state.imageURL} />
           </div>
         ) : this.state.route === "signin" ? (
           <Signin onRouteChange={this.onRouteChange} loadUser={this.loadUser} />
@@ -175,7 +146,6 @@ onBtnSubmit = () => {
             loadUser={this.loadUser}
           />
         )}
-        ;
       </div>
     );
   }
